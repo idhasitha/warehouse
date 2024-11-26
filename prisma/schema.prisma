@@ -1,0 +1,101 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model Notes {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Areas {
+  id        Int      @id @default(autoincrement())
+  x         Int
+  y         Int
+  width     Int
+  length    Int
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Zones     Zones[]
+  Aisles    Aisles[]
+}
+
+model Zones {
+  id        Int      @id @default(autoincrement())
+  x         Int
+  y         Int
+  width     Int
+  length    Int
+  name      String
+  area      Areas    @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  areaId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Aisles    Aisles[]
+}
+
+model Aisles {
+  id              Int               @id @default(autoincrement())
+  x               Int
+  y               Int
+  axis            String
+  length          Int
+  name            String
+  levels          Int
+  levelNames      String
+  racks           Int
+  area            Areas             @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  areaId          Int
+  zone            Zones             @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  zoneId          Int
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  ProductLocation ProductLocation[]
+}
+
+model Products {
+  id                Int              @id @default(autoincrement())
+  title             String
+  description       String?          @db.Text
+  brand             String
+  category          String
+  thumbnail         String
+  price             Decimal
+  stock             Decimal
+  rating            Decimal
+  movingStatus      MovingStatus?    @default(SLOW)
+  productLocationId Int?
+  ProductLocation   ProductLocation? @relation(fields: [productLocationId], references: [id], onDelete: SetNull)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+enum MovingStatus {
+  SLOW
+  MEDIUM
+  FAST
+  NONMOVING
+}
+
+model ProductLocation {
+  id        Int        @id @default(autoincrement())
+  aisle     Aisles     @relation(fields: [aisleId], references: [id], onDelete: Cascade)
+  aisleId   Int
+  location  String
+  isFilled  Boolean
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  Products  Products[]
+}
